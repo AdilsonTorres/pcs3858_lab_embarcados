@@ -1,6 +1,6 @@
 from mvnc import mvncapi as mvnc
 from imutils.video import VideoStream
-from immutils.video import FPS
+from imutils.video import FPS
 import argparse
 import numpy as np
 import time
@@ -39,8 +39,9 @@ def predict(image, graph):
 
     # send the image to the NCS and run a forward pass to grab the
     # network predictions
-    graph.LoadTensor(image, None)
-    (output, _) = graph.GetResult()
+    # graph.LoadTensor(image, None)
+    graph.queue_inference_with_fifo_elem(input_fifo, output_fifo, image.astype(np.float32), None)
+    (output, _) = output_fifo.read_elem()
 
     # grab the number of valid object predictions from the output,
     # then initialize the list of predictions
@@ -99,7 +100,7 @@ args = vars(ap.parse_args())
 
 # grab a list of all NCS devices plugged in to USB
 print("[INFO] finding NCS devices...")
-devices = mvnc.EnumerateDevices()
+devices = mvnc.enumerate_devices()
 
 # if no devices found, exit the script
 if len(devices) == 0:
@@ -111,7 +112,7 @@ if len(devices) == 0:
 print("[INFO] found {} devices. device0 will be used. "
       "opening device0...".format(len(devices)))
 device = mvnc.Device(devices[0])
-device.OpenDevice()
+device.open()
 
 # open the CNN graph file
 print("[INFO] loading the graph file into RPi memory...")
@@ -120,7 +121,9 @@ with open(args["graph"], mode="rb") as f:
 
 # load the graph into the NCS
 print("[INFO] allocating the graph on the NCS...")
-graph = device.AllocateGraph(graph_in_memory)
+graph = mvnc.Graph('graph1')
+# graph.allocate(device, graph_buffer)
+input_fifo, output_fifo = graph.allocate_with_fifos(device, graph_in_memory)
 
 # open a pointer to the video stream thread and allow the buffer to
 # start to fill, then start the FPS counter
@@ -208,8 +211,14 @@ if args["display"] > 0:
 vs.stop()
 
 # clean up the graph and device
-graph.DeallocateGraph()
-device.CloseDevice()
+# graph.DeallocateGraph()
+# device.CloseDevice()
+input_fifo.destroy()
+output_fifo.destroy()
+graph.destroy()
+device.close()
+device.destroy()
+
 
 # display FPS information
 print("[INFO] elapsed time: {:.2f}".format(fps.elapsed()))
