@@ -5,6 +5,8 @@ import argparse
 import numpy as np
 import time
 import cv2
+import datetime
+import sys, os
 
 # initialize the list of class labels our network was trained to
 # detect, then generate a set of bounding box colors for each class
@@ -20,6 +22,14 @@ DISPLAY_DIMS = (900, 900)
 
 # calculate the multiplier needed to scale the bounding boxes
 DISP_MULTIPLIER = DISPLAY_DIMS[0] // PREPROCESS_DIMS[0]
+
+
+def update_person_number(number):
+	file_name = datetime.datetime.now().strftime('%d/%m/%Y') + '.txt'
+	file_path = os.path.abspath(os.path.dirname(sys.argv[0])) + '/../'
+	with open(file_name + file_path, 'w') as f:
+		f.truncate(0)
+		f.write(number)
 
 
 def preprocess_image(input_image):
@@ -132,6 +142,9 @@ vs = VideoStream(usePiCamera=True).start()
 time.sleep(1)
 fps = FPS().start()
 
+# count the max number of person detected
+max_person_counter = 0
+
 # loop over frames from the video file stream
 while True:
     try:
@@ -144,6 +157,9 @@ while True:
         # use the NCS to acquire predictions
         predictions = predict(frame, graph)
 
+		# current person counter
+		person_counter = 0
+
         # loop over our predictions
         for (i, pred) in enumerate(predictions):
             # extract prediction data for readability
@@ -152,30 +168,38 @@ while True:
             # filter out weak detections by ensuring the `confidence`
             # is greater than the minimum confidence
             if pred_conf > args["confidence"]:
+				# count the number of person
+				if CLASSES[pred_class] == "person":
+					person_counter += 1
+
                 # print prediction to terminal
                 print("[INFO] Prediction #{}: class={}, confidence={}, "
                       "boxpoints={}".format(i, CLASSES[pred_class], pred_conf,
                                             pred_boxpts))
-            # check if we should show the prediction data
-            # on the frame
-            if args["display"] > 0:
-                # build a label consisting of the predicted class and
-                # associated probability
-                label = "{}: {:.2f}%".format(CLASSES[pred_class],
-                                             pred_conf * 100)
+				# check if we should show the prediction data
+				# on the frame
+				if args["display"] > 0:
+					# build a label consisting of the predicted class and
+					# associated probability
+					label = "{}: {:.2f}%".format(CLASSES[pred_class],
+									 pred_conf * 100)
 
-                # extract information from the prediction boxpoints
-                (ptA, ptB) = (pred_boxpts[0], pred_boxpts[1])
-                ptA = (ptA[0] * DISP_MULTIPLIER, ptA[1] * DISP_MULTIPLIER)
-                ptB = (ptB[0] * DISP_MULTIPLIER, ptB[1] * DISP_MULTIPLIER)
-                (startX, startY) = (ptA[0], ptA[1])
-                y = startY - 15 if startY - 15 > 15 else startY + 15
+					# extract information from the prediction boxpoints
+					(ptA, ptB) = (pred_boxpts[0], pred_boxpts[1])
+					ptA = (ptA[0] * DISP_MULTIPLIER, ptA[1] * DISP_MULTIPLIER)
+					ptB = (ptB[0] * DISP_MULTIPLIER, ptB[1] * DISP_MULTIPLIER)
+					(startX, startY) = (ptA[0], ptA[1])
+					y = startY - 15 if startY - 15 > 15 else startY + 15
 
-                # display the rectangle and label text
-                cv2.rectangle(image_for_result, ptA, ptB,
-                              COLORS[pred_class], 2)
-                cv2.putText(image_for_result, label, (startX, y),
-                            cv2.FONT_HERSHEY_SIMPLEX, 1, COLORS[pred_class], 3)
+					# display the rectangle and label text
+					cv2.rectangle(image_for_result, ptA, ptB,
+							  COLORS[pred_class], 2)
+					cv2.putText(image_for_result, label, (startX, y),
+							cv2.FONT_HERSHEY_SIMPLEX, 1, COLORS[pred_class], 3)
+
+		if person_counter > max_person_counter:
+			max_person_counter = person_counter
+			update_person_number(person_counter)
 
         # check if we should display the frame on the screen
         # with prediction data (you can achieve faster FPS if you
