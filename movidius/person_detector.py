@@ -29,7 +29,7 @@ def update_person_number(number):
 	file_path = os.path.abspath(os.path.dirname(sys.argv[0])) + '/../'
 	with open(file_name + file_path, 'w') as f:
 		f.truncate(0)
-		f.write(number)
+		f.write('{}'.format(number))
 
 
 def preprocess_image(input_image):
