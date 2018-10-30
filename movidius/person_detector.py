@@ -174,12 +174,14 @@ while True:
             # extract prediction data for readability
             (pred_class, pred_conf, pred_boxpts) = pred
 
+            if CLASSES[pred_class] != "person":
+                continue
+
             # filter out weak detections by ensuring the `confidence`
             # is greater than the minimum confidence
             if pred_conf > args["confidence"]:
                 # count the number of person
-                if CLASSES[pred_class] == "person":
-                    person_counter += 1
+                person_counter += 1
 
                 # print prediction to terminal
                 print("[INFO] Prediction #{}: class={}, confidence={}, "
