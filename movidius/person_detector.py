@@ -27,7 +27,7 @@ DISP_MULTIPLIER = DISPLAY_DIMS[0] // PREPROCESS_DIMS[0]
 def update_person_number(number):
 	file_name = datetime.datetime.now().strftime('%d-%m-%Y') + '.txt'
 	file_path = os.path.abspath(os.path.dirname(sys.argv[0])) + '/../'
-	with open(file_name + file_path, 'w') as f:
+	with open(file_path + file_name, 'w') as f:
 		f.truncate(0)
 		f.write('{}'.format(number))
 
