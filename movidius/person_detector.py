@@ -32,7 +32,7 @@ def update_person_number(number):
                 people_number = int(f.read())
                 if people_number > number:
                     return
-        except FileNotFoundError:
+        except IOError:
             pass
         except ValueError:
             pass
