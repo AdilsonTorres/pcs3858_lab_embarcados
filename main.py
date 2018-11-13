@@ -1,6 +1,7 @@
 import sys
 from time import sleep
 
+import json
 import os
 
 import argparse
@@ -18,7 +19,7 @@ def colorful_print(msg, color):
 def arg_parse():
     parser = argparse.ArgumentParser(description='Server')
     parser.add_argument('-rr', '--refresh_rate', help='Refresh rate in seconds to check modules score', type=int, default=30)
-    parser.add_argument('-d', '--video', help='Display video', action='store_true')
+    parser.add_argument('-d', '--display', help='Display video', action='store_true')
 
     return parser.parse_args()
 
@@ -48,8 +49,7 @@ def get_wifi_score():
     wifi_score_command = []
     score_process = Popen(wifi_score_command, stdout=PIPE)
     stdout = score_process.communicate()
-    print(stdout)
-    score = 0
+    score = json.loads(stdout[0].decode('utf-8'))['client_length']
 
     file_name = get_file_name('wifi')
 
@@ -62,7 +62,7 @@ def get_wifi_score():
 
 def main(args):
     detection_commands = ['python3', 'detectionExample/movidius/YoloV2NCS/Main.py']
-    wifi_commands = ['/usr/bin/ndsctl', 'status']
+    wifi_commands = ['sudo', '/usr/bin/ndsctl', 'json']
 
     if args.video:
         detection_commands.append('--display')
