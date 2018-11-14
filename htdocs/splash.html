@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link rel="stylesheet" type="text/css" href="splash.css">
+
+<title>Kinoberry</title>
+
+</head>
+
+<body>
+<med-blue>Bem vindo ao sistema do Prof. Kinoshita!</med-blue>
+<br>
+<font size="2"><italic-black>Este sistema foi criado para facilitar a vida do professor. </italic-black></font>
+<br><br>
+<img src="/images/basofilo.png" alt="">
+<hr>
+<big-red>Regras de uso</big-red>
+<hr><br>
+- Para poupar o professor de fazer chamada oral, conecte-se no sistema para registro da sua frequência na aula. 
+<br>
+&nbsp; <b>Observação</b>: não conecte com as credenciais de um amigo, pois o sistema apresenta proteções anti-fraude.<br>
+- O sistema será utilizado na realização de avaliações <b>sem consulta</b>. Se o seu dispositivo se desconectar da rede fornecida pelo professor, isto poderá ser consisderado como "cola" e sua avaliação será <b>anulada</b>.
+<br><br>
+<hr>
+<br>
+<form method="get" action="$authaction">
+Login ID (nUSP): <input type="text" name="nUSP" value=""><br>
+<p></p>
+<!-- <input type="hidden" name="action" value="logar" /> -->
+<input type="hidden" name="tok" value="$tok">
+<input type="hidden" name="redir" value="$redir" >
+<input type="submit" value="Conectar">
+</form>
+<br>
+<hr>
+<copy-right> &copy; 2018, Kinoberry. All trademarks and registerd trademarks appearing on this site are the property of their respective owners.</copy-right>
+
+</body>
+</html>
