@@ -6,8 +6,8 @@ import os
 
 import argparse
 import datetime
-from subprocess import Popen, PIPE
-
+# from subprocess import Popen, PIPE
+import subprocess
 
 ACCEPTABLE_ERROR = 2
 
@@ -47,7 +47,8 @@ def get_detection_score():
 
 def get_wifi_score():
     wifi_score_command = []
-    score_process = Popen(wifi_score_command, stdout=PIPE)
+    # score_process = Popen(wifi_score_command, stdout=PIPE)
+    score_process = subprocess.Popen(wifi_score_command)
     stdout = score_process.communicate()
     score = json.loads(stdout[0].decode('utf-8'))['client_length']
 
@@ -64,35 +65,38 @@ def main(args):
     detection_commands = ['python3', 'detectionExample/movidius/YoloV2NCS/Main.py']
     wifi_commands = ['sudo', '/usr/bin/ndsctl', 'json']
 
-    if args.video:
+    if args.display:
         detection_commands.append('--display')
 
-    detection_process = Popen(detection_commands)
-    wifi_process = Popen(wifi_commands)
+    # detection_process = Popen(detection_commands)
+    # wifi_process = Popen(wifi_commands)
+    detection_process = subprocess.Popen(detection_commands, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     try:
         while True:
             detector_score = get_detection_score()
-            wifi_score = get_wifi_score()
+            # wifi_score = get_wifi_score()
             msg = '[{}]: '.format(datetime.datetime.now().strftime('%H:%M:%S'))
 
-            if detector_score == wifi_score:
-                msg += 'SUCCESS - {} people counted.'.format(detector_score)
-                color = Colors.GREEN
+            color = Colors.GREEN
 
-            elif detector_score - wifi_score > ACCEPTABLE_ERROR:
-                msg += 'WARNING - Detector = {} | Wifi = {}.'.format(detector_score, wifi_score)
-                color = Colors.WARNING
-            else:
-                msg += 'ERROR - Detector = {} | Wifi = {}.'.format(detector_score, wifi_score)
-                color = Colors.FAIL
+            # if detector_score == wifi_score:
+            #     msg += 'SUCCESS - {} people counted.'.format(detector_score)
+            #     color = Colors.GREEN
+            #
+            # elif detector_score - wifi_score > ACCEPTABLE_ERROR:
+            #     msg += 'WARNING - Detector = {} | Wifi = {}.'.format(detector_score, wifi_score)
+            #     color = Colors.WARNING
+            # else:
+            #     msg += 'ERROR - Detector = {} | Wifi = {}.'.format(detector_score, wifi_score)
+            #     color = Colors.FAIL
 
             colorful_print(msg, color)
             sleep(args.refresh_rate)
 
     except KeyboardInterrupt:
         detection_process.kill()
-        wifi_process.kill()
+        # wifi_process.kill()
 
 
 class Colors:
