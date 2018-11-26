@@ -62,7 +62,7 @@ def get_wifi_score():
 
 
 def main(args):
-    detection_commands = ['python3', 'detectionExample/movidius/YoloV2NCS/Main.py']
+    detection_commands = ['python3', 'movidius/YoloV2NCS/detectionExample/Main.py', '--graph', 'movidius/YoloV2NCS/graph']
     wifi_commands = ['sudo', '/usr/bin/ndsctl', 'json']
 
     if args.display:
