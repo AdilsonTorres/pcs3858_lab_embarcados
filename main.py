@@ -6,11 +6,11 @@ import os
 
 import argparse
 import datetime
-from subprocess import Popen, PIPE
+from subprocess import Popen, PIPE, DEVNULL
 
 
 ACCEPTABLE_ERROR = 2
-
+MACS_CONNECTED = set()
 
 def colorful_print(msg, color):
     print(color + msg + Colors.END)
@@ -29,7 +29,9 @@ def get_file_name(origin):
     if origin not in options:
         raise ValueError('Invalid origin value.')
     file_name = datetime.datetime.now().strftime('%d-%m-%Y') + '_' + origin + '.txt'
-    file_path = os.path.abspath(os.path.dirname(sys.argv[0])) + '/../'
+    file_path = os.path.abspath(os.path.dirname(sys.argv[0])) + '/'
+    if origin == 'detection':
+        file_name = 'movidius/YoloV2NCS/' + file_name
     return file_path + file_name
 
 
@@ -40,35 +42,60 @@ def get_detection_score():
             score = int(f.readline())
         return score
     except ValueError:
-        return 0
+        return -1
     except FileNotFoundError:
-        return 0
+        return -2
 
 
 def get_wifi_score():
-    wifi_score_command = []
+    global MACS_CONNECTED
+    wifi_score_command = ['sudo', '/usr/bin/ndsctl', 'json']
     score_process = Popen(wifi_score_command, stdout=PIPE)
-    stdout = score_process.communicate()
-    score = json.loads(stdout[0].decode('utf-8'))['client_length']
+    stdout = score_process.communicate(timeout=30)
+    response = json.loads(stdout[0].decode('utf-8'))
+    score_connected = response['client_length']
+
+    if score_connected > 0:
+        score = 0
+        for client in response['clients']:
+            if response['clients'][client]['state'] == 'Authenticated':
+                score += 1
+                MACS_CONNECTED.add(client)
 
     file_name = get_file_name('wifi')
+    read_macs = set()
+    try:
+        with open(file_name, 'r') as f:
+            score_read = -1
+            index = 0
+            for line in f.readlines():
+                if index == 0:
+                    score_read = int(line)
+                else:
+                    read_macs.add(line.strip())
+                index += 1
+    except FileNotFoundError:
+        pass
 
+    mac_totals = MACS_CONNECTED.union(read_macs)
+    score_connected = len(mac_totals)
     with open(file_name, 'w') as f:
-        f.truncate(0)
-        f.write('{}'.format(score))
+        content = '{}'.format(score_connected)
+        for mac in mac_totals:
+            content += '\n{}'.format(mac)
+        f.write(content)
 
-    return score
+    return score_connected
 
 
 def main(args):
-    detection_commands = ['python3', 'detectionExample/movidius/YoloV2NCS/Main.py']
+    detection_commands = ['python3', 'movidius/YoloV2NCS/detectionExample/Main.py', '--graph', 'movidius/YoloV2NCS/graph']
     wifi_commands = ['sudo', '/usr/bin/ndsctl', 'json']
 
-    if args.video:
+    if args.display:
         detection_commands.append('--display')
 
-    detection_process = Popen(detection_commands)
-    wifi_process = Popen(wifi_commands)
+    detection_process = Popen(detection_commands, stdout=DEVNULL)
 
     try:
         while True:
@@ -76,11 +103,13 @@ def main(args):
             wifi_score = get_wifi_score()
             msg = '[{}]: '.format(datetime.datetime.now().strftime('%H:%M:%S'))
 
-            if detector_score == wifi_score:
+            difference = detector_score - wifi_score
+
+            if difference == 0:
                 msg += 'SUCCESS - {} people counted.'.format(detector_score)
                 color = Colors.GREEN
 
-            elif detector_score - wifi_score > ACCEPTABLE_ERROR:
+            elif difference > 0 and difference < ACCEPTABLE_ERROR:
                 msg += 'WARNING - Detector = {} | Wifi = {}.'.format(detector_score, wifi_score)
                 color = Colors.WARNING
             else:
@@ -92,7 +121,6 @@ def main(args):
 
     except KeyboardInterrupt:
         detection_process.kill()
-        wifi_process.kill()
 
 
 class Colors:
