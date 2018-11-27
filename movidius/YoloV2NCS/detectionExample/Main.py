@@ -1,9 +1,9 @@
 import sys,os,time,csv,getopt,cv2,argparse
-import numpy as np
 from datetime import datetime
-
+import numpy as np
 from ObjectWrapper import *
 from Visualize import *
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -13,6 +13,7 @@ if __name__ == '__main__':
                         help='An image path.')
     parser.add_argument('--video', dest='video',
                         default=0, help='A video path.')
+    parser.add_argument("--display", help='Display video', action='store_true')
     args = parser.parse_args()
 
     network_blob=args.graph
@@ -33,11 +34,11 @@ if __name__ == '__main__':
         elapsedTime = end-start
 
         print ('total time is " milliseconds', elapsedTime.total_seconds()*1000)
-
-        imdraw = Visualize(img, results)
-        cv2.imshow('Demo',imdraw)
-        cv2.imwrite('test.jpg',imdraw)
-        cv2.waitKey(10000)
+        if args.display:
+            imdraw = Visualize(img, results)
+            cv2.imshow('Demo',imdraw)
+            cv2.imwrite('test.jpg',imdraw)
+            cv2.waitKey(10000)
     elif videofile is not None:
         # video preprocess
         cap = cv2.VideoCapture(0)
@@ -65,9 +66,10 @@ if __name__ == '__main__':
                         max_person_counter = person_counter
                         update_person_number(person_counter)
 
-                    #imdraw = Visualize(imArr[i], results[i])
-                    #fpsImg = cv2.putText(imdraw, "%.2ffps" % fps, (70, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 0), 2)
-                    #cv2.imshow('Demo', fpsImg)
+                    if args.display:
+                        imdraw = Visualize(imArr[i], results[i])
+                        fpsImg = cv2.putText(imdraw, "%.2ffps" % fps, (70, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 0), 2)
+                        cv2.imshow('Demo', fpsImg)
                 end = time.time()
                 seconds = end - start
                 fps = stickNum / seconds
