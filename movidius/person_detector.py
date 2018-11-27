@@ -216,7 +216,10 @@ while True:
         # do not output to the screen)
         if args["display"] > 0:
             # display the frame to the screen
-            cv2.imshow("Output", image_for_result)
+            w = 'output'
+            cv2.namedWindow(w, cv2.WINDOW_NORMAL)
+            cv2.resizeWindow(w, 600, 600)
+            cv2.imshow(w, image_for_result)
             key = cv2.waitKey(1) & 0xFF
 
             # if the `q` key was pressed, break from the loop

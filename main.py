@@ -95,12 +95,12 @@ def main(args):
     if args.display:
         detection_commands.append('--display')
 
-    detection_process = Popen(detection_commands, stdout=DEVNULL)
+    detection_process = Popen(detection_commands, stdout=DEVNULL, stderr=DEVNULL)
 
     try:
         while True:
             detector_score = get_detection_score()
-            # wifi_score = get_wifi_score()
+            wifi_score = get_wifi_score()
             msg = '[{}]: '.format(datetime.datetime.now().strftime('%H:%M:%S'))
 
             difference = detector_score - wifi_score
